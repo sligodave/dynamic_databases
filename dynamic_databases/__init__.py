@@ -1,4 +1,4 @@
 
-__version__ = '0.01'
+__version__ = '0.02'
 
 default_app_config = 'dynamic_databases.apps.DynamicDatabasesConfig'
