@@ -32,7 +32,7 @@ class Database(models.Model):
     @property
     def connection(self):
         self.register()
-        return connections.get(self.label, None)
+        return connections[self.label]
 
     def register(self):
         # label for the database connection and dummy app
