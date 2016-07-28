@@ -23,8 +23,16 @@ class Database(models.Model):
     name = models.CharField(max_length=256)
     config = JSONField()
 
+    class Meta:
+        ordering = ('name', 'id')
+
     def __unicode__(self):
         return self.name
+
+    @property
+    def connection(self):
+        self.register()
+        return connections.get(self.label, None)
 
     def register(self):
         # label for the database connection and dummy app
