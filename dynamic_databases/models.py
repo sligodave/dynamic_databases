@@ -34,6 +34,15 @@ class Database(models.Model):
         self.register()
         return connections[self.label]
 
+    @property
+    def tables(self):
+        cursor = self.connection.cursor()
+        cursor.execute('SHOW TABLES;')
+        tables = []
+        for row in cursor.fetchall():
+            tables.append(row[0])
+        return tables
+
     def register(self):
         # label for the database connection and dummy app
         label = self.label
