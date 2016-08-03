@@ -12,5 +12,5 @@ logger = getLogger('dynamic_databases.receivers')
 
 @receiver([pre_save, pre_delete], sender=Database)
 def unregister_database(sender, **kwargs):
-    if 'instance' in kwargs:
+    if 'instance' in kwargs and kwargs['instance'].pk is not None:
         kwargs['instance'].unregister()
