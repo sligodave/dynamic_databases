@@ -10,6 +10,7 @@ from django.core.management.commands.inspectdb import Command
 from django.db import models, connections
 from django.apps import AppConfig
 from django.apps.registry import apps
+from django import VERSION
 
 from jsonfield import JSONField
 
@@ -93,9 +94,13 @@ class Database(models.Model):
 
             # Use the "inspectdb" management command to get the structure of the table for us.
             file_obj = StringIO()
-            Command(stdout=file_obj).handle(
-                database=label, table_name_filter=lambda t: t == table_name
-            )
+            kwargs = {
+                'database': label,
+                'table_name_filter': lambda t: t == table_name
+            }
+            if VERSION[0] >= 1 and VERSION[1] >= 10:
+                kwargs['table'] = [table_name]
+            Command(stdout=file_obj).handle(**kwargs)
             model_definition = file_obj.getvalue()
             file_obj.close()
 
