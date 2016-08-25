@@ -123,7 +123,7 @@ class Database(models.Model):
                     )
 
                 # Register the model with Django. Sad day when we use 'exec'
-                exec(model_definition, globals(), locals())
+                exec model_definition in globals(), locals()
                 # Update the list of models that the app
                 # has to match what Django now has for this app
                 apps.app_configs[label].models = apps.all_models[label]
