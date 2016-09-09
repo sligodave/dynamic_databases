@@ -20,12 +20,13 @@ from dynamic_databases import settings
 logger = getLogger('dynamic_databases.models')
 
 
-class Database(models.Model):
+class AbstractDatabase(models.Model):
     name = models.CharField(max_length=256)
     config = JSONField()
 
     class Meta:
         ordering = ('name', 'id')
+        abstract = True
 
     def __unicode__(self):
         return self.name
@@ -123,6 +124,7 @@ class Database(models.Model):
                     )
 
                 # Register the model with Django. Sad day when we use 'exec'
+                # exec(model_definition, globals(), locals())
                 exec model_definition in globals(), locals()
                 # Update the list of models that the app
                 # has to match what Django now has for this app
@@ -139,3 +141,7 @@ class Database(models.Model):
                 model_name in apps.all_models[label]
         ):
             return apps.get_model(label, model_name)
+
+
+class Database(AbstractDatabase):
+    pass
