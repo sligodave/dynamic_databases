@@ -46,35 +46,32 @@ class AbstractDatabase(models.Model):
         return tables
 
     def register(self):
-        # label for the database connection and dummy app
-        label = self.label
         # Do we have this database registered yet
-        if label not in connections._databases:
+        if self.label not in connections._databases:
             # Register the database
-            connections._databases[label] = self.config
+            connections._databases[self.label] = self.config
             # Break the cached version of the database dict so it'll find our new database
             del connections.databases
         # Have we registered our fake app that'll hold the models for this database
-        if label not in apps.app_configs:
+        if self.label not in apps.app_configs:
             # We create our own AppConfig class, because the Django one needs a path to the module that is the app.
-            #Our dummy app obviously doesn't have a path
+            # Our dummy app obviously doesn't have a path
             AppConfig2 = type(
-                'AppConfig'.encode('utf8'), (AppConfig,), {'path': '/tmp/{}'.format(label)}
+                'AppConfig'.encode('utf8'), (AppConfig,), {'path': '/tmp/{}'.format(self.label)}
             )
-            app_config = AppConfig2(label, label)
+            app_config = AppConfig2(self.label, self.label)
             # Manually register the app with the running Django instance
-            apps.app_configs[label] = app_config
-            apps.app_configs[label].models = {}
+            apps.app_configs[self.label] = app_config
+            apps.app_configs[self.label].models = {}
 
     def unregister(self):
-        label = self.label
-        logger.info('Unregistering Database, app and all related models: "%s"', label)
-        if label in apps.app_configs:
-            del apps.app_configs[label]
-        if label in apps.all_models:
-            del apps.all_models[label]
-        if label in connections._databases:
-            del connections._databases[label]
+        logger.info('Unregistering Database, app and all related models: "%s"', self.label)
+        if self.label in apps.app_configs:
+            del apps.app_configs[self.label]
+        if self.label in apps.all_models:
+            del apps.all_models[self.label]
+        if self.label in connections._databases:
+            del connections._databases[self.label]
             del connections.databases
 
     @property
@@ -86,17 +83,16 @@ class AbstractDatabase(models.Model):
     def get_model(self, table_name):
         # Ensure the database connect and it's dummy app are registered
         self.register()
-        label = self.label
         model_name = table_name.lower().replace('_', '')
 
         # Is the model already registered with the dummy app?
-        if model_name not in apps.all_models[label]:
-            logger.info('Adding dynamic model: %s %s', label, table_name)
+        if model_name not in apps.all_models[self.label]:
+            logger.info('Adding dynamic model: %s %s', self.label, table_name)
 
             # Use the "inspectdb" management command to get the structure of the table for us.
             file_obj = StringIO()
             kwargs = {
-                'database': label,
+                'database': self.label,
                 'table_name_filter': lambda t: t == table_name
             }
             if VERSION[0] >= 1 and VERSION[1] >= 10:
@@ -120,7 +116,7 @@ class AbstractDatabase(models.Model):
                 loc = model_definition.find('db_table = \'{}\''.format(table_name))
                 if loc != -1:
                     model_definition = '{}app_label = \'{}\'\n        {}'.format(
-                        model_definition[:loc], label, model_definition[loc:]
+                        model_definition[:loc], self.label, model_definition[loc:]
                     )
 
                 # Register the model with Django. Sad day when we use 'exec'
@@ -128,19 +124,19 @@ class AbstractDatabase(models.Model):
                 exec model_definition in globals(), locals()
                 # Update the list of models that the app
                 # has to match what Django now has for this app
-                apps.app_configs[label].models = apps.all_models[label]
+                apps.app_configs[self.label].models = apps.all_models[self.label]
             else:
-                logger.info('Could not find table: %s %s', label, table_name)
+                logger.info('Could not find table: %s %s', self.label, table_name)
         else:
-            logger.info('Already added dynamic model: %s %s', label, table_name)
+            logger.info('Already added dynamic model: %s %s', self.label, table_name)
 
         # If we have the connection, app and model. Return the model class
         if (
-                label in connections._databases and
-                label in apps.all_models and
-                model_name in apps.all_models[label]
+                self.label in connections._databases and
+                self.label in apps.all_models and
+                model_name in apps.all_models[self.label]
         ):
-            return apps.get_model(label, model_name)
+            return apps.get_model(self.label, model_name)
 
 
 class Database(AbstractDatabase):
