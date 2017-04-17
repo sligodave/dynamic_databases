@@ -60,6 +60,7 @@ class AbstractDatabase(models.Model):
                 'AppConfig'.encode('utf8'), (AppConfig,), {'path': '/tmp/{}'.format(self.label)}
             )
             app_config = AppConfig2(self.label, self.label)
+            app_config.apps = apps
             # Manually register the app with the running Django instance
             apps.app_configs[self.label] = app_config
             apps.app_configs[self.label].models = {}
