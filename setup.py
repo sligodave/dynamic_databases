@@ -8,7 +8,7 @@ setup(
         'on the fly and also the ability to query the database'
         '\'s tables through dynamically generated models. '
     ),
-    author='David',
+    author='David Higgins',
     author_email='sligodave@gmail.com',
     url='https://github.com/sligodave/dynamic_databases/',
     packages=find_packages(),
@@ -19,6 +19,10 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Framework :: Django',
+    ],
+    install_requires=[
+        'django',
+        'jsonfield'
     ],
     include_package_data=True,
     zip_safe=False,
