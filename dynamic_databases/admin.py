@@ -4,14 +4,14 @@ from json import dumps
 
 from django.contrib import admin
 
-from dynamic_databases.models import Database
+from dynamic_databases.models import DynamicDatabaseConfig
 
 
 logger = getLogger('dynamic_databases.admin')
 
 
 def engine(obj):
-    return obj.config.get('engine', '')
+    return obj.config.get('engine', obj.config.get('ENGINE'))
 engine.short_description = 'Engine'
 
 
@@ -20,8 +20,8 @@ def config(obj):
 config.short_description = 'Config'
 
 
-class DatabaseAdmin(admin.ModelAdmin):
+class DynamicDatabaseConfigAdmin(admin.ModelAdmin):
     list_display = ('name', engine, config)
 
 
-admin.site.register(Database, DatabaseAdmin)
+admin.site.register(DynamicDatabaseConfig, DynamicDatabaseConfigAdmin)
