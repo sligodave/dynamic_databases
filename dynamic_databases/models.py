@@ -28,6 +28,9 @@ class AbstractDynamicDatabaseConfig(models.Model):
             name='{}_{}'.format(self.pk, self.name), config=self.config
         )
 
+    # Handy shortcut
+    dd = dynamic_database
+
 
 class DynamicDatabaseConfig(AbstractDynamicDatabaseConfig):
     pass
