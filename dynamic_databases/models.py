@@ -28,8 +28,15 @@ class AbstractDatabase(models.Model):
         ordering = ('name', 'id')
         abstract = True
 
+    def __init__(self, augmentor=None, *args, **kwargs):
+        self.augmentor = augmentor
+        super(AbstractDatabase, self).__init__(*args, **kwargs)
+
     def __unicode__(self):
-        return self.name
+        name = self.name
+        if self.augmentor:
+            name = '{} : {}'.format(name, self.augmentor)
+        return name
 
     @property
     def connection(self):
@@ -57,7 +64,7 @@ class AbstractDatabase(models.Model):
         # Have we registered our fake app that'll hold the models for this database
         if label not in apps.app_configs:
             # We create our own AppConfig class, because the Django one needs a path to the module that is the app.
-            #Our dummy app obviously doesn't have a path
+            # Our dummy app obviously doesn't have a path
             AppConfig2 = type(
                 'AppConfig'.encode('utf8'), (AppConfig,), {'path': '/tmp/{}'.format(label)}
             )
@@ -81,7 +88,10 @@ class AbstractDatabase(models.Model):
     def label(self):
         # We want to be able to identify the dynamic databases and apps
         # So we prepend their names with a common string
-        return '{}{}{}'.format(settings.PREFIX, settings.SEPARATOR, self.pk)
+        label = '{}{}{}'.format(settings.PREFIX, settings.SEPARATOR, self.pk)
+        if self.augmentor:
+            label = '{}{}{}'.format(label, settings.SEPARATOR, self.augmentor)
+        return label
 
     def get_model(self, table_name):
         # Ensure the database connect and it's dummy app are registered
