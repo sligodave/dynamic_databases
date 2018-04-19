@@ -1,10 +1,10 @@
-from __future__ import unicode_literals
+
 
 from logging import getLogger
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 from django.core.management.commands.inspectdb import Command
 from django.db import models, connections
@@ -135,7 +135,7 @@ class AbstractDatabase(models.Model):
 
                 # Register the model with Django. Sad day when we use 'exec'
                 # exec(model_definition, globals(), locals())
-                exec model_definition in globals(), locals()
+                exec(model_definition, globals(), locals())
                 # Update the list of models that the app
                 # has to match what Django now has for this app
                 apps.app_configs[label].models = apps.all_models[label]
