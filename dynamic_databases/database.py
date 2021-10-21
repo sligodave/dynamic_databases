@@ -51,11 +51,11 @@ class DynamicDatabase(object):
 
     def register(self):
         # Do we have this database registered yet
-        if self.label not in connections._databases:
+        if self.label not in connections._settings:
             # Register the database
-            connections._databases[self.label] = self.config
+            connections._settings[self.label] = self.config
             # Break the cached version of the database dict so it'll find our new database
-            del connections.databases
+            del connections.settings
         # Have we registered our fake app that'll hold the models for this database
         if self.label not in apps.app_configs:
             # We create our own AppConfig class,
@@ -72,9 +72,9 @@ class DynamicDatabase(object):
             del apps.app_configs[self.label]
         if self.label in apps.all_models:
             del apps.all_models[self.label]
-        if self.label in connections._databases:
-            del connections._databases[self.label]
-            del connections.databases
+        if self.label in connections._settings:
+            del connections._settings[self.label]
+            del connections.settings
 
     def get_model(self, table_name):
         # Ensure the database connect and it's dummy app are registered
@@ -89,9 +89,11 @@ class DynamicDatabase(object):
             file_obj = BufferWriter()
             kwargs = {
                 'database': self.label,
-                'table_name_filter': lambda t: t == table_name
+                'table_name_filter': lambda t: t == table_name,
+                'include_partitions': False,
+                'include_views': False,
             }
-            if VERSION[0] >= 1 and VERSION[1] >= 10:
+            if VERSION[0] >= 3 or (VERSION[0] >= 1 and VERSION[1] >= 10):
                 kwargs['table'] = [table_name]
             Command(stdout=file_obj).handle(**kwargs)
             model_definition = file_obj.data
@@ -127,7 +129,7 @@ class DynamicDatabase(object):
 
         # If we have the connection, app and model. Return the model class
         if (
-                self.label in connections._databases and
+                self.label in connections._settings and
                 self.label in apps.all_models and
                 model_name in apps.all_models[self.label]
         ):
